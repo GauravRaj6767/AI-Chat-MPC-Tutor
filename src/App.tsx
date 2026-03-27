@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import SubjectTabs from "./components/SubjectTabs";
 import ChatWindow from "./components/ChatWindow";
 import InputBar from "./components/InputBar";
-import UsageDashboard from "./components/UsageDashboard";
+import UsageDashboard, { type UsageData } from "./components/UsageDashboard";
 import { Sun, Moon } from "lucide-react";
 
 export type Subject = "maths" | "physics" | "chemistry";
@@ -34,6 +34,9 @@ export default function App() {
     chemistry: [],
   });
   const [loading, setLoading] = useState(false);
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
+  const [usageLoading, setUsageLoading] = useState(true);
+  const [usageLastRefresh, setUsageLastRefresh] = useState(new Date());
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     return (localStorage.getItem("theme") as "dark" | "light") ?? "dark";
   });
@@ -46,6 +49,26 @@ export default function App() {
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }, []);
+
+  // Fetch usage once on mount — does NOT re-run on tab switches
+  const fetchUsage = useCallback(async () => {
+    setUsageLoading(true);
+    try {
+      const res = await fetch("/api/usage");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setUsageData(data);
+      setUsageLastRefresh(new Date());
+    } catch (err) {
+      console.error("[App] Failed to fetch usage:", err);
+    } finally {
+      setUsageLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsage();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentSubject: Subject =
     activeTab === "usage" ? "maths" : activeTab;
@@ -166,7 +189,12 @@ export default function App() {
       </header>
 
       {activeTab === "usage" ? (
-        <UsageDashboard />
+        <UsageDashboard
+          data={usageData}
+          loading={usageLoading}
+          lastRefresh={usageLastRefresh}
+          onRefresh={fetchUsage}
+        />
       ) : (
         <>
           <ChatWindow
