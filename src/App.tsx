@@ -3,6 +3,7 @@ import SubjectTabs from "./components/SubjectTabs";
 import ChatWindow from "./components/ChatWindow";
 import InputBar from "./components/InputBar";
 import UsageDashboard, { type UsageData } from "./components/UsageDashboard";
+import LoginScreen from "./components/LoginScreen";
 import { Sun, Moon } from "lucide-react";
 
 export type Subject = "maths" | "physics" | "chemistry";
@@ -27,6 +28,7 @@ function generateId(): string {
 }
 
 export default function App() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem("jee_auth") === "1");
   const [activeTab, setActiveTab] = useState<Tab>("maths");
   const [messages, setMessages] = useState<Record<Subject, Message[]>>({
     maths: [],
@@ -57,7 +59,7 @@ export default function App() {
       const res = await fetch("/api/usage");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setUsageData(data);
+      setUsageData({ ...data, hasMore: data.hasMore ?? false });
       setUsageLastRefresh(new Date());
     } catch (err) {
       console.error("[App] Failed to fetch usage:", err);
@@ -168,6 +170,10 @@ export default function App() {
     },
     [currentSubject],
   );
+
+  if (!authed) {
+    return <LoginScreen onSuccess={() => setAuthed(true)} />;
+  }
 
   return (
     <div className="app">

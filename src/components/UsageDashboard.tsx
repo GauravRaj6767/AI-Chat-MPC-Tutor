@@ -1,4 +1,5 @@
-import { RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, ChevronDown } from "lucide-react";
 import type { SessionRow, MonthlySummary } from "../lib/supabase";
 
 const USD_TO_INR = 85;
@@ -37,6 +38,7 @@ function fmtMonth(val: string): string {
 
 export interface UsageData {
   sessions: SessionRow[];
+  hasMore: boolean;
   monthly: MonthlySummary[];
   summary: {
     sessionCount: number;
@@ -77,6 +79,37 @@ function SkeletonCard() {
 }
 
 export default function UsageDashboard({ data, loading, lastRefresh, onRefresh }: UsageDashboardProps) {
+  const [extraSessions, setExtraSessions] = useState<SessionRow[]>([]);
+  const [hasMore, setHasMore] = useState(() => data?.hasMore ?? false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Reset extra sessions when a refresh happens
+  const allSessions = [...(data?.sessions ?? []), ...extraSessions];
+  const currentOffset = allSessions.length;
+
+  const loadMore = async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(`/api/usage?offset=${currentOffset}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = await res.json();
+      setExtraSessions((prev) => [...prev, ...(d.sessions ?? [])]);
+      setHasMore(d.hasMore ?? false);
+    } catch (err) {
+      console.error("[UsageDashboard] Load more failed:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // When parent refreshes, reset pagination
+  const handleRefresh = () => {
+    setExtraSessions([]);
+    setHasMore(data?.hasMore ?? false);
+    onRefresh();
+  };
+
   const summary = data?.summary ?? {
     sessionCount: 0, totalInputTokens: 0, totalOutputTokens: 0,
     totalTokens: 0, totalInputCostUsd: 0, totalOutputCostUsd: 0, totalCostUsd: 0,
@@ -90,7 +123,7 @@ export default function UsageDashboard({ data, loading, lastRefresh, onRefresh }
         <h2>Usage Dashboard</h2>
         <button
           className="input-btn"
-          onClick={onRefresh}
+          onClick={handleRefresh}
           disabled={loading}
           title="Refresh"
           style={{ padding: 6 }}
@@ -175,46 +208,62 @@ export default function UsageDashboard({ data, loading, lastRefresh, onRefresh }
 
       {/* Recent Sessions */}
       <div className="usage-section">
-        <h3>Recent Sessions (Last 20)</h3>
-        {!loading && sessions.length === 0 ? (
+        <h3>Recent Sessions</h3>
+        {!loading && allSessions.length === 0 ? (
           <div className="usage-empty">No sessions recorded yet.</div>
         ) : (
-          <table className="usage-table">
-            <thead>
-              <tr>
-                <th>Time</th><th>Subject</th><th>Question</th>
-                <th>In tokens</th><th>Out tokens</th>
-                <th>Cost (USD)</th><th>Cost (INR)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading
-                ? Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} cols={7} />)
-                : sessions.map((row) => (
-                  <tr key={row.id}>
-                    <td style={{ whiteSpace: "nowrap" }}>{fmtTime(row.created_at)}</td>
-                    <td>
-                      <span className={`subject-badge ${row.subject?.toLowerCase()}`}>
-                        {row.subject}
-                      </span>
-                    </td>
-                    <td
-                      style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                      title={row.question_preview}
-                    >
-                      {row.question_preview}{row.has_image && " [img]"}
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>{fmtTokens(row.input_tokens)}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>{fmtTokens(row.output_tokens)}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      {fmtUsd(row.input_cost_usd)} + {fmtUsd(row.output_cost_usd)} = {fmtUsd(row.total_cost_usd)}
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>{fmtInr(row.total_cost_usd)}</td>
-                  </tr>
-                ))
-              }
-            </tbody>
-          </table>
+          <>
+            <table className="usage-table">
+              <thead>
+                <tr>
+                  <th>Time</th><th>Subject</th><th>Question</th>
+                  <th>In tokens</th><th>Out tokens</th>
+                  <th>Cost (USD)</th><th>Cost (INR)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading
+                  ? Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} cols={7} />)
+                  : allSessions.map((row) => (
+                    <tr key={row.id}>
+                      <td style={{ whiteSpace: "nowrap" }}>{fmtTime(row.created_at)}</td>
+                      <td>
+                        <span className={`subject-badge ${row.subject?.toLowerCase()}`}>
+                          {row.subject}
+                        </span>
+                      </td>
+                      <td
+                        style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                        title={row.question_preview}
+                      >
+                        {row.question_preview}{row.has_image && " [img]"}
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>{fmtTokens(row.input_tokens)}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{fmtTokens(row.output_tokens)}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {fmtUsd(row.input_cost_usd)} + {fmtUsd(row.output_cost_usd)} = {fmtUsd(row.total_cost_usd)}
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>{fmtInr(row.total_cost_usd)}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+
+            {/* Load more */}
+            {!loading && (hasMore || data?.hasMore) && (
+              <button
+                className="load-more-btn"
+                onClick={loadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore
+                  ? <><span className="login-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Loading…</>
+                  : <><ChevronDown size={15} /> Load 10 more sessions</>
+                }
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

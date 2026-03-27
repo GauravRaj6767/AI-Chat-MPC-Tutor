@@ -27,6 +27,19 @@ CREATE POLICY "Allow public read" ON ai_chat_mpc_sessions
 CREATE POLICY "Allow service insert" ON ai_chat_mpc_sessions
   FOR INSERT WITH CHECK (true);
 
+-- Totals view — single-row aggregate used by the dashboard summary cards
+-- This is always accurate regardless of how many sessions exist
+CREATE OR REPLACE VIEW ai_chat_mpc_totals AS
+SELECT
+  COUNT(*)::INTEGER                        AS session_count,
+  COALESCE(SUM(input_tokens),0)::INTEGER   AS total_input_tokens,
+  COALESCE(SUM(output_tokens),0)::INTEGER  AS total_output_tokens,
+  COALESCE(SUM(total_tokens),0)::INTEGER   AS total_tokens,
+  COALESCE(SUM(input_cost_usd),0)         AS total_input_cost_usd,
+  COALESCE(SUM(output_cost_usd),0)        AS total_output_cost_usd,
+  COALESCE(SUM(total_cost_usd),0)         AS total_cost_usd
+FROM ai_chat_mpc_sessions;
+
 -- Monthly summary view for the dashboard
 CREATE OR REPLACE VIEW ai_chat_mpc_monthly_summary AS
 SELECT

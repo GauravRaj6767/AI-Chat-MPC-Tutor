@@ -845,6 +845,35 @@ body::before {
   font-size: 0.88rem;
 }
 
+.load-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 16px;
+  background: var(--bg-glass);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+.load-more-btn:hover:not(:disabled) {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Skeleton loading shimmer */
 .skeleton {
   background: linear-gradient(
@@ -947,6 +976,161 @@ body::before {
 .markdown-content th {
   background: var(--bg-glass);
   font-weight: 600;
+}
+
+/* ============================================================
+   LOGIN SCREEN  (Glassmorphism card over mesh bg)
+   ============================================================ */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--bg-base);
+}
+
+.login-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 10%, var(--blue-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, var(--purple-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 60% 40%, var(--green-glow) 0%, transparent 60%);
+  opacity: 0.4;
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 22px;
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-lg), 0 0 60px var(--blue-glow);
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  border-radius: 99px;
+}
+
+.login-icon {
+  font-size: 2.4rem;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-glow-blue);
+  margin-bottom: 4px;
+}
+
+.login-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.login-field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.login-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-glow);
+}
+.login-input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.2) !important;
+}
+.login-input::placeholder { color: var(--text-muted); }
+
+.login-error {
+  font-size: 0.8rem;
+  color: #ef4444;
+  padding-left: 2px;
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 13px;
+  border-radius: var(--radius);
+  border: none;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: var(--shadow-glow-blue);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+}
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px var(--blue-glow), 0 0 40px var(--purple-glow);
+}
+.login-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }
 
 /* ============================================================
