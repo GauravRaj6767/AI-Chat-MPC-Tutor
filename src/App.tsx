@@ -70,7 +70,14 @@ export default function App() {
       setLoading(true);
 
       try {
-        const body: Record<string, unknown> = { subject, question: text };
+        // Send only the last 2 exchanges (4 messages) as context.
+        // Full history stays visible in the UI — only what Gemini sees is trimmed.
+        const CONTEXT_WINDOW = 4;
+        const history = messages[subject]
+          .slice(-CONTEXT_WINDOW)
+          .map((m) => ({ role: m.role, text: m.text }));
+
+        const body: Record<string, unknown> = { subject, question: text, history };
         if (imageBase64 && imageMimeType) {
           body.imageBase64 = imageBase64;
           body.imageMimeType = imageMimeType;

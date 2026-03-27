@@ -48,11 +48,15 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { subject, question, imageBase64, imageMimeType } = req.body ?? {};
+  const { subject, question, imageBase64, imageMimeType, history } = req.body ?? {};
 
   if (!question || typeof question !== "string") {
     return res.status(400).json({ error: "question is required" });
   }
+
+  // history is an array of { role: "user" | "ai", text: string }
+  const chatHistory: Array<{ role: "user" | "ai"; text: string }> =
+    Array.isArray(history) ? history : [];
 
   const geminiKey = process.env.GEMINI_API_KEY;
   if (!geminiKey || geminiKey === "ADD_YOUR_GEMINI_KEY_HERE") {
@@ -69,7 +73,17 @@ export default async function handler(
       systemInstruction: SYSTEM_PROMPT,
     });
 
-    // Build content parts
+    // Convert history to Gemini's Content format
+    // Gemini uses "user" and "model" roles (not "ai")
+    const geminiHistory = chatHistory.map((m) => ({
+      role: m.role === "ai" ? "model" : "user",
+      parts: [{ text: m.text }],
+    }));
+
+    // Start a chat session with prior context
+    const chat = model.startChat({ history: geminiHistory });
+
+    // Build the new message parts (text + optional image)
     const parts: Array<
       | { text: string }
       | { inlineData: { data: string; mimeType: string } }
@@ -77,15 +91,12 @@ export default async function handler(
 
     if (imageBase64 && imageMimeType) {
       parts.push({
-        inlineData: {
-          data: imageBase64,
-          mimeType: imageMimeType,
-        },
+        inlineData: { data: imageBase64, mimeType: imageMimeType },
       });
     }
 
-    // Call Gemini
-    const result = await model.generateContent(parts);
+    // Send the new message with full prior context
+    const result = await chat.sendMessage(parts);
     const response = result.response;
     const answer = response.text();
 
@@ -99,7 +110,7 @@ export default async function handler(
       outputTokens,
     );
 
-    // Log to Supabase (non-blocking -- don't fail the response)
+    // Log to Supabase — runs in parallel, never blocks or breaks the response
     logToSupabase({
       subject: subject ?? "unknown",
       questionPreview: question.slice(0, 200),
@@ -111,8 +122,10 @@ export default async function handler(
       outputCostUsd: outputCost,
       totalCostUsd: totalCost,
       model: MODEL_ID,
+    }).then(() => {
+      console.log(`[Supabase] Logged: ${totalTokens} tokens, $${totalCost.toFixed(6)}`);
     }).catch((err) => {
-      console.error("Supabase logging failed:", err);
+      console.error("[Supabase] Insert failed — check RLS policy or credentials:", err?.message ?? err);
     });
 
     return res.status(200).json({
@@ -154,7 +167,9 @@ async function logToSupabase(data: {
     return;
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
   const { error } = await supabase.from("ai_chat_mpc_sessions").insert({
     subject: data.subject,
