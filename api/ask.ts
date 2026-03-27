@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 const SYSTEM_PROMPT =
   "You are an expert JEE tutor. Solve problems step-by-step with clear explanations. For maths show all working. For physics explain concepts and formulas used. For chemistry explain reactions and mechanisms. Use markdown formatting.";
 
-const MODEL_ID = "gemini-2.5-pro-preview-06-05";
+const MODEL_ID = "gemini-2.5-pro";
 
 // Gemini 2.5 Pro pricing (as of March 2026, Google AI Developer API)
 // Source: https://ai.google.dev/gemini-api/docs/pricing
