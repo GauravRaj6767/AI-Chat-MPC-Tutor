@@ -34,12 +34,22 @@ function fmtTime(iso: string): string {
   });
 }
 
+function fmtMonth(val: string): string {
+  // Handles both "YYYY-MM" and full ISO timestamps
+  const d = val.length === 7 ? new Date(`${val}-01`) : new Date(val);
+  return d.toLocaleString("en-IN", { month: "long", year: "numeric" });
+}
+
 export default function UsageDashboard() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [summary, setSummary] = useState({
-    totalTokens: 0,
-    totalCostUsd: 0,
     sessionCount: 0,
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalTokens: 0,
+    totalInputCostUsd: 0,
+    totalOutputCostUsd: 0,
+    totalCostUsd: 0,
   });
   const [monthly, setMonthly] = useState<MonthlySummary[]>([]);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -95,18 +105,23 @@ export default function UsageDashboard() {
         </div>
         <div className="usage-card">
           <div className="usage-card-label">Total Tokens</div>
-          <div className="usage-card-value">
-            {fmtTokens(summary.totalTokens)}
+          <div className="usage-card-value">{fmtTokens(summary.totalTokens)}</div>
+          <div className="usage-card-sub">
+            🔢 {fmtTokens(summary.totalInputTokens)} in · ✨ {fmtTokens(summary.totalOutputTokens)} out
           </div>
         </div>
         <div className="usage-card">
           <div className="usage-card-label">Total Cost (USD)</div>
           <div className="usage-card-value">{fmtUsd(summary.totalCostUsd)}</div>
+          <div className="usage-card-sub">
+            in {fmtUsd(summary.totalInputCostUsd)} · out {fmtUsd(summary.totalOutputCostUsd)}
+          </div>
         </div>
         <div className="usage-card">
           <div className="usage-card-label">Total Cost (INR)</div>
-          <div className="usage-card-value">
-            {fmtInr(summary.totalCostUsd)}
+          <div className="usage-card-value">{fmtInr(summary.totalCostUsd)}</div>
+          <div className="usage-card-sub">
+            in {fmtInr(summary.totalInputCostUsd)} · out {fmtInr(summary.totalOutputCostUsd)}
           </div>
         </div>
       </div>
@@ -128,7 +143,7 @@ export default function UsageDashboard() {
             <tbody>
               {monthly.map((row, i) => (
                 <tr key={i}>
-                  <td>{row.month}</td>
+                  <td>{fmtMonth(row.month)}</td>
                   <td>
                     <span
                       className={`subject-badge ${row.subject?.toLowerCase()}`}
@@ -160,8 +175,10 @@ export default function UsageDashboard() {
                 <th>Time</th>
                 <th>Subject</th>
                 <th>Question</th>
-                <th>Tokens</th>
-                <th>Cost</th>
+                <th>In tokens</th>
+                <th>Out tokens</th>
+                <th>Cost (USD)</th>
+                <th>Cost (INR)</th>
               </tr>
             </thead>
             <tbody>
@@ -171,27 +188,27 @@ export default function UsageDashboard() {
                     {fmtTime(row.created_at)}
                   </td>
                   <td>
-                    <span
-                      className={`subject-badge ${row.subject?.toLowerCase()}`}
-                    >
+                    <span className={`subject-badge ${row.subject?.toLowerCase()}`}>
                       {row.subject}
                     </span>
                   </td>
                   <td
-                    style={{
-                      maxWidth: 250,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
+                    style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                     title={row.question_preview}
                   >
-                    {row.question_preview}
-                    {row.has_image && " [img]"}
+                    {row.question_preview}{row.has_image && " [img]"}
                   </td>
-                  <td>{fmtTokens(row.total_tokens)}</td>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    {fmtUsd(row.total_cost_usd)} / {fmtInr(row.total_cost_usd)}
+                    {fmtTokens(row.input_tokens)}
+                  </td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    {fmtTokens(row.output_tokens)}
+                  </td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    {fmtUsd(row.input_cost_usd)} + {fmtUsd(row.output_cost_usd)} = {fmtUsd(row.total_cost_usd)}
+                  </td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    {fmtInr(row.total_cost_usd)}
                   </td>
                 </tr>
               ))}

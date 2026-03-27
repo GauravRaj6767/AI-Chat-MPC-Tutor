@@ -42,11 +42,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const sessions = sessionsResult.data ?? [];
 
-    // Calculate summary totals from sessions
+    // Calculate summary totals from all sessions (not just last 20)
+    const allSessionsResult = await supabase
+      .from("ai_chat_mpc_sessions")
+      .select("input_tokens, output_tokens, total_tokens, input_cost_usd, output_cost_usd, total_cost_usd");
+
+    const allRows = allSessionsResult.data ?? [];
     const summary = {
-      sessionCount: sessions.length,
-      totalTokens: sessions.reduce((sum, r) => sum + (r.total_tokens ?? 0), 0),
-      totalCostUsd: sessions.reduce((sum, r) => sum + Number(r.total_cost_usd ?? 0), 0),
+      sessionCount: allRows.length,
+      totalInputTokens: allRows.reduce((s, r) => s + (r.input_tokens ?? 0), 0),
+      totalOutputTokens: allRows.reduce((s, r) => s + (r.output_tokens ?? 0), 0),
+      totalTokens: allRows.reduce((s, r) => s + (r.total_tokens ?? 0), 0),
+      totalInputCostUsd: allRows.reduce((s, r) => s + Number(r.input_cost_usd ?? 0), 0),
+      totalOutputCostUsd: allRows.reduce((s, r) => s + Number(r.output_cost_usd ?? 0), 0),
+      totalCostUsd: allRows.reduce((s, r) => s + Number(r.total_cost_usd ?? 0), 0),
     };
 
     console.log(`[usage] Fetched ${sessions.length} sessions`);
