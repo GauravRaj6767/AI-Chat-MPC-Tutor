@@ -1,0 +1,34 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Environment variables (NEVER commit these)
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# Local files
+*.local
+
+# Claude Code
+.claude
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea
+
+# Playwright MCP screenshots/output
+.playwright-mcp
+
+# Logs
+*.log
+npm-debug.log*
