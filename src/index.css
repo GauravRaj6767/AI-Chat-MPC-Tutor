@@ -341,6 +341,7 @@ body::before {
   flex-direction: column;
   gap: 18px;
   scroll-behavior: smooth;
+  min-height: 0;
 }
 
 /* ============================================================
@@ -355,6 +356,7 @@ body::before {
   text-align: center;
   padding: 40px 24px;
   gap: 18px;
+  min-height: 0;
 }
 
 .empty-icon {
@@ -930,12 +932,230 @@ body::before {
 /* ============================================================
    RESPONSIVE
    ============================================================ */
-@media (max-width: 640px) {
+
+/* ── Tablet (≤ 768px) ── */
+@media (max-width: 768px) {
+  .app {
+    max-width: 100%;
+  }
+
+  .app-header {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .subject-tab {
+    padding: 7px 11px;
+    font-size: 0.82rem;
+  }
+
+  .chat-window {
+    padding: 16px 12px;
+    gap: 14px;
+  }
+
+  .message {
+    max-width: 88%;
+  }
+
+  .empty-state {
+    padding: 28px 16px;
+    gap: 14px;
+  }
+
+  .empty-questions {
+    max-width: 100%;
+  }
+
+  .usage-dashboard {
+    padding: 18px 14px;
+  }
+
+  .usage-summary-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Table: hide less-important columns on tablet */
+  .usage-table .col-hide-tablet {
+    display: none;
+  }
+
+  .input-bar {
+    padding: 10px 12px 12px;
+  }
+}
+
+/* ── Mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+  /* Header */
   .app-logo-text { display: none; }
+  .app-logo-icon { width: 30px; height: 30px; font-size: 14px; }
+
+  .app-header {
+    padding: 7px 10px;
+  }
+
+  /* Tabs: icons only */
   .subject-tab span { display: none; }
-  .subject-tab { padding: 7px 10px; }
-  .message { max-width: 92%; }
-  .usage-summary-cards { grid-template-columns: 1fr 1fr; }
-  .chat-window { padding: 14px 10px; }
-  .input-bar { padding: 10px 10px 12px; }
+  .subject-tab {
+    padding: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  /* Chat */
+  .chat-window {
+    padding: 12px 8px;
+    gap: 12px;
+  }
+
+  .message {
+    max-width: 94%;
+  }
+
+  .message-bubble {
+    padding: 10px 13px;
+    font-size: 0.89rem;
+  }
+
+  /* Meta pills: stack them if needed */
+  .message-meta {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .meta-pill {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: 20px 12px;
+    gap: 12px;
+  }
+
+  .empty-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
+
+  .empty-state h2 {
+    font-size: 1.15rem;
+  }
+
+  .empty-state p {
+    font-size: 0.84rem;
+  }
+
+  .example-question {
+    padding: 9px 13px;
+    font-size: 0.82rem;
+  }
+
+  /* Input */
+  .input-bar {
+    padding: 8px 8px 10px;
+  }
+
+  .input-outer {
+    border-radius: 12px;
+  }
+
+  .input-textarea {
+    font-size: 0.88rem;
+  }
+
+  .file-hint {
+    font-size: 0.65rem;
+  }
+
+  /* Usage dashboard */
+  .usage-dashboard {
+    padding: 14px 10px;
+  }
+
+  .usage-header h2 {
+    font-size: 1.05rem;
+  }
+
+  .usage-summary-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .usage-card {
+    padding: 14px 12px;
+  }
+
+  .usage-card-value {
+    font-size: 1.15rem;
+  }
+
+  .usage-card-label {
+    font-size: 0.68rem;
+  }
+
+  /* Table on mobile: make it horizontally scrollable */
+  .usage-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .usage-table {
+    min-width: 480px;
+    font-size: 0.78rem;
+  }
+
+  .usage-table th,
+  .usage-table td {
+    padding: 7px 8px;
+  }
+}
+
+/* ── Very small phones (≤ 360px) ── */
+@media (max-width: 360px) {
+  .subject-tab {
+    padding: 7px 6px;
+  }
+
+  .usage-summary-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .usage-card-value {
+    font-size: 1rem;
+  }
+}
+
+/* ── Touch devices: better tap targets ── */
+@media (hover: none) and (pointer: coarse) {
+  .subject-tab {
+    min-height: 40px;
+  }
+
+  .input-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .example-question {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .theme-toggle {
+    min-width: 36px;
+    min-height: 36px;
+  }
 }
