@@ -1,12 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { RefreshCw } from "lucide-react";
-import {
-  fetchRecentSessions,
-  fetchUsageSummary,
-  fetchMonthlySummary,
-  type SessionRow,
-  type MonthlySummary,
-} from "../lib/supabase";
+import type { SessionRow, MonthlySummary } from "../lib/supabase";
 
 const USD_TO_INR = 85;
 
@@ -54,15 +48,15 @@ export default function UsageDashboard() {
   const refresh = useCallback(async () => {
     setLoadingRefresh(true);
     try {
-      const [sess, sum, mon] = await Promise.all([
-        fetchRecentSessions(20),
-        fetchUsageSummary(),
-        fetchMonthlySummary(),
-      ]);
-      setSessions(sess);
-      setSummary(sum);
-      setMonthly(mon);
+      const res = await fetch("/api/usage");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setSessions(data.sessions ?? []);
+      setSummary(data.summary ?? { totalTokens: 0, totalCostUsd: 0, sessionCount: 0 });
+      setMonthly(data.monthly ?? []);
       setLastRefresh(new Date());
+    } catch (err) {
+      console.error("[UsageDashboard] Failed to fetch:", err);
     } finally {
       setLoadingRefresh(false);
     }

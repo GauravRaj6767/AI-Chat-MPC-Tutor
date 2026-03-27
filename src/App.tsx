@@ -117,6 +117,18 @@ export default function App() {
           ...prev,
           [subject]: [...prev[subject], aiMessage],
         }));
+
+        // Fire-and-forget: log usage to DB via dedicated endpoint
+        // Runs completely in background — any failure here never affects the UI
+        if (data.usage) {
+          fetch("/api/log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data.usage),
+          }).catch(() => {
+            // Silent — DB logging failure must never surface to user
+          });
+        }
       } catch (err) {
         const errorMessage: Message = {
           id: generateId(),
